@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/api.ts","./src/main.tsx","./src/vite-env.d.ts","./src/components/alertspanel.tsx","./src/components/extendedmetricsview.tsx","./src/components/globalsearch.tsx","./src/components/logsview.tsx","./src/components/metricchart.tsx","./src/components/timerange.ts","./src/pages/dashboard.tsx","./src/pages/login.tsx"],"version":"5.9.3"}

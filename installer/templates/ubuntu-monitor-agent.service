@@ -1,0 +1,17 @@
+[Unit]
+Description=Ubuntu Monitor Agent
+Documentation=https://github.com/ubuntu-monitor
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=__WORKING_DIR__
+ExecStart=__EXEC_START__
+Restart=always
+RestartSec=15
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

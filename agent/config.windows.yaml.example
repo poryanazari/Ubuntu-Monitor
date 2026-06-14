@@ -1,0 +1,4 @@
+# Windows agent config — copy to config.windows.yaml
+server_url: "http://YOUR_SERVER_IP:8000"
+agent_key: "YOUR_AGENT_KEY_HERE"
+interval_seconds: 30

@@ -1,0 +1,4 @@
+# Copy this file and set your agent_key from the dashboard
+server_url: "http://localhost:8000"
+agent_key: "YOUR_AGENT_KEY_HERE"
+interval_seconds: 30
