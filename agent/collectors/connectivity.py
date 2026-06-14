@@ -64,7 +64,7 @@ def collect_connectivity() -> dict[str, Any]:
     targets = ["8.8.8.8", "1.1.1.1"]
     latency_checks = [ping_target(t) for t in targets]
     dns = check_dns()
-    ports = [check_port("127.0.0.1", p) for p in (22, 80, 443, 3306, 5432, 6379)]
+    ports = [check_port("127.0.0.1", p) for p in (22, 80, 443, 3306, 5432, 6379, 27017)]
 
     return {
         "latency": latency_checks,

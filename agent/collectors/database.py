@@ -1,5 +1,6 @@
-"""Database monitoring: PostgreSQL, MySQL, Redis."""
+"""Database monitoring: PostgreSQL, MySQL, Redis, MongoDB."""
 
+import json
 import socket
 from typing import Any
 
@@ -12,6 +13,35 @@ def _port_open(host: str, port: int, timeout: float = 0.5) -> bool:
             return True
     except OSError:
         return False
+
+
+def _mongo_eval(script: str) -> str:
+    """Run mongosh or legacy mongo shell."""
+    shells = [
+        ["mongosh", "--quiet"],
+        ["mongo", "--quiet"],
+    ]
+    for shell in shells:
+        out = run_cmd(shell + ["--eval", script], timeout=15)
+        if out.strip():
+            return out.strip()
+        out = run_cmd(shell + ["mongodb://127.0.0.1:27017", "--eval", script], timeout=15)
+        if out.strip():
+            return out.strip()
+    return ""
+
+
+def _parse_mongo_replication(status: dict[str, Any]) -> str:
+    repl = status.get("repl")
+    if not repl:
+        return "standalone"
+    if repl.get("isWritablePrimary") or repl.get("ismaster"):
+        return "primary"
+    if repl.get("secondary"):
+        return "secondary"
+    if repl.get("setName"):
+        return str(repl["setName"])
+    return "replica"
 
 
 def check_postgresql() -> dict[str, Any] | None:
@@ -106,9 +136,66 @@ def check_redis() -> dict[str, Any] | None:
     }
 
 
+def check_mongodb() -> dict[str, Any] | None:
+    if not _port_open("127.0.0.1", 27017):
+        return None
+
+    script = (
+        "try {"
+        "var s = db.serverStatus();"
+        "print(JSON.stringify({"
+        "available: true,"
+        "version: s.version,"
+        "connections_active: s.connections.current,"
+        "memory_used_mb: s.mem.resident,"
+        "opcounters_query: s.opcounters.query,"
+        "replication: s.repl"
+        "? (s.repl.isWritablePrimary || s.repl.ismaster ? 'primary'"
+        ": (s.repl.secondary ? 'secondary' : (s.repl.setName || 'replica')))"
+        ": 'standalone'"
+        "}));"
+        "} catch (e) { print(JSON.stringify({available: false, error: e.message})); }"
+    )
+    raw = _mongo_eval(script)
+
+    if raw:
+        try:
+            data = json.loads(raw.splitlines()[0])
+            if data.get("available"):
+                return {
+                    "type": "mongodb",
+                    "available": True,
+                    "connections_active": int(data.get("connections_active", 0)),
+                    "version": str(data.get("version", ""))[:120],
+                    "memory_used_mb": safe_float(data.get("memory_used_mb")),
+                    "opcounters_query": int(safe_float(data.get("opcounters_query"))),
+                    "replication": str(data.get("replication", "unknown")),
+                    "slow_queries": 0,
+                    "cache_hit_ratio": None,
+                    "disk_usage_mb": None,
+                }
+        except (json.JSONDecodeError, ValueError, TypeError):
+            pass
+
+    # Port open but shell unavailable — still report reachability
+    ping_out = _mongo_eval("print('ok')")
+    available = ping_out.strip().lower() == "ok" or _port_open("127.0.0.1", 27017)
+    return {
+        "type": "mongodb",
+        "available": available,
+        "connections_active": 0,
+        "version": "",
+        "memory_used_mb": None,
+        "replication": "unknown",
+        "slow_queries": 0,
+        "cache_hit_ratio": None,
+        "disk_usage_mb": None,
+    }
+
+
 def collect_databases() -> list[dict[str, Any]]:
     results = []
-    for checker in (check_postgresql, check_mysql, check_redis):
+    for checker in (check_postgresql, check_mysql, check_redis, check_mongodb):
         item = checker()
         if item:
             results.append(item)

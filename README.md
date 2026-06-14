@@ -146,7 +146,7 @@ Ubuntu-Monitor/
 - Critical systemd services (sshd, nginx, mysql, …)
 
 ### 3. Databases (auto-detected)
-- PostgreSQL, MySQL/MariaDB, Redis: availability, connections, version/memory
+- PostgreSQL, MySQL/MariaDB, Redis, MongoDB: availability, connections, version/memory
 
 ### 4. Web & application
 - HTTP checks (localhost), response time, status codes
@@ -156,7 +156,7 @@ Ubuntu-Monitor/
 ### 5. External connectivity
 - Ping latency & packet loss (8.8.8.8, 1.1.1.1)
 - DNS resolution test
-- Port checks (22, 80, 443, 3306, 5432, 6379)
+- Port checks (22, 80, 443, 3306, 5432, 6379, 27017)
 
 ### 6. Security
 - Failed SSH logins, open/listening ports, unexpected ports

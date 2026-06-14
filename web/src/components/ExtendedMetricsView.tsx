@@ -196,7 +196,14 @@ export default function ExtendedMetricsView({ data }: { data: ExtendedMetrics | 
                   <td>{db.type}</td>
                   <td>{db.available ? "✓" : "✗"}</td>
                   <td>{db.connections_active ?? "—"}</td>
-                  <td className="mono">{db.version || db.memory_used_mb ? `${db.memory_used_mb ?? ""} MB` : "—"}</td>
+                  <td className="mono">
+                    {[
+                      db.version,
+                      db.memory_used_mb != null ? `${db.memory_used_mb} MB` : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ") || "—"}
+                  </td>
                 </tr>
               ))}
             </tbody>
